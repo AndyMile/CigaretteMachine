@@ -7,10 +7,13 @@ use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use App\Machine\PurchaseTransaction;
+use App\Machine\CigaretteMachine;
 
 /**
  * Class CigaretteMachine
  * @package App\Command
+ * 
  */
 class PurchaseCigarettesCommand extends Command
 {
@@ -34,23 +37,39 @@ class PurchaseCigarettesCommand extends Command
         $itemCount = (int) $input->getArgument('packs');
         $amount = (float) \str_replace(',', '.', $input->getArgument('amount'));
 
+        if ($itemCount < 1) {
+            $output->writeln('Enter a number of cigarettes packs, please.');
+            exit();
+        }
 
-        // $cigaretteMachine = new CigaretteMachine();
-        // ...
+        if ($amount == 0) {
+            $output->writeln('Provide the payment, please.');
+            exit();
+        }
 
-        $output->writeln('You bought <info>...</info> packs of cigarettes for <info>...</info>, each for <info>...</info>. ');
+        try {
+            $cigaretteMachine = new CigaretteMachine();
+            $purchaseTransaction = $cigaretteMachine->execute(new PurchaseTransaction($itemCount, $amount, $cigaretteMachine::ITEM_PRICE));
+
+        } catch (\Exception $e) {
+            $output->writeln(sprintf('The error occurred: %s', $e->getMessage()));
+            exit();
+        }
+
+        $output->writeln(
+            sprintf(
+                'You bought <info>%s</info> packs of cigarettes for <info>%s</info>, each for <info>%s</info>.',
+                $purchaseTransaction->getItemQuantity(),
+                $purchaseTransaction->getTotalAmount(),
+                $cigaretteMachine::ITEM_PRICE,
+            )
+        );
         $output->writeln('Your change is:');
 
         $table = new Table($output);
         $table
             ->setHeaders(array('Coins', 'Count'))
-            ->setRows(array(
-                // ...
-                array('0.02', '0'),
-                array('0.01', '0'),
-            ))
-        ;
+            ->setRows($purchaseTransaction->getChange());
         $table->render();
-
     }
 }

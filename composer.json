@@ -2,7 +2,8 @@
   "type": "skilltest-junior",
   "license": "proprietary",
   "require": {
-    "symfony/console": "^3.4"
+    "symfony/console": "^3.4",
+    "phpunit/phpunit": "^9.5"
   },
   "autoload": {
     "psr-4": {
